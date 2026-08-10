@@ -2,7 +2,6 @@ import { useState } from "preact/hooks";
 import "./app.css";
 import type { JSX } from "preact";
 import Piano from "./piano/piano";
-
 enum Pages {
   PIANO = "Piano",
   MoreSoon = "More Soon",
@@ -15,7 +14,7 @@ const PagesContent: Record<Pages, () => JSX.Element> = {
 
 export function App() {
   const [currentPage, setCurrentPage] = useState<Pages>(Pages.PIANO);
-
+  const CurrentPageComponent = PagesContent[currentPage];
   return (
     <>
       <section id="hero" className={"mt-1 flex justify-center"}>
@@ -31,7 +30,9 @@ export function App() {
         </div>
       </section>
 
-      <section id="center">{PagesContent[currentPage]()}</section>
+      <section id="center">
+        <CurrentPageComponent />
+      </section>
       <div class="ticks"></div>
       <section id="spacer"></section>
     </>
