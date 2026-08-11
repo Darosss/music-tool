@@ -1,0 +1,146 @@
+import { create } from "zustand";
+import type { AudioStore, RecorderStore } from "./types";
+import type { AudioEngineEvent } from "../audio/types";
+import { PianoVibe } from "../piano/utils";
+
+export const useRecorderStore = create<RecorderStore>((set, get) => ({
+  startRecording: (audioCtx, loopLengthSeconds) => {
+    set((state) => ({
+      ...state,
+      isRecording: true,
+      events: [],
+      openNotes: new Map(),
+      loopLength: loopLengthSeconds || null,
+      recordStartTime: audioCtx?.currentTime || 0,
+    }));
+  },
+  stopRecording: (audioCtx) => {
+    set((state) => {
+      const now = state.getRelativeTime(audioCtx);
+      const newOpenNotes = state.openNotes;
+      for (const ev of newOpenNotes.values()) ev.end = now;
+      return { ...state, isRecording: false, openNotes: newOpenNotes };
+    });
+  },
+
+  isRecording: false,
+  openNotes: new Map(),
+  loopLength: 0,
+  recordStartTime: 0,
+  events: [],
+
+  getRelativeTime: (audioCtx) => {
+    const t = (audioCtx.currentTime || 0) - get().recordStartTime;
+    return get().loopLength ? t % (get().loopLength || 0) : t;
+  },
+  setIsRecording: (isRecording) => {
+    set((state) => ({
+      ...state,
+      isRecording: isRecording,
+    }));
+  },
+  recordNote: (note, audioCtx) => {
+    if (!get().isRecording) return;
+    const ev: AudioEngineEvent = {
+      ...note,
+      start: get().getRelativeTime(audioCtx),
+      end: null,
+    };
+
+    set((state) => {
+      const newEvents = [...state.events, ev];
+      const newOpenNotes = state.openNotes;
+      newOpenNotes.set(note.note, ev);
+      return {
+        ...state,
+        events: newEvents,
+        openNotes: newOpenNotes,
+      };
+    });
+  },
+  endNote: (note, audioCtx) => {
+    set((state) => {
+      const foundOpenNote = state.openNotes.get(note);
+      const foundEventIdx = state.events.findIndex(
+        (n) => n.start === foundOpenNote?.start,
+      );
+      if (foundEventIdx == -1) return state;
+
+      const newEvents = state.events;
+      const endTime = get().getRelativeTime(audioCtx);
+
+      const currentEvent = newEvents[foundEventIdx];
+      newEvents[foundEventIdx] = {
+        ...currentEvent,
+        end: endTime > currentEvent.start ? endTime : state.loopLength,
+      };
+
+      const newOpenNotes = state.openNotes;
+      newOpenNotes.delete(note);
+      return { ...state, events: newEvents, openNotes: newOpenNotes };
+    });
+  },
+}));
+
+export const useAudioStore = create<AudioStore>((set, get) => ({
+  audioCtx: null,
+  isInitialized: false,
+  vibe: PianoVibe.CLASSIC,
+  reverbLevel: 0,
+  echoLevel: 0,
+  masterGain: null,
+  reverbNode: null,
+  delayNode: null,
+  delayGain: null,
+  activeOscillators: new Map(),
+  initAudio: () => {
+    if (get().audioCtx) return;
+    const audioCtx = new (
+      window.AudioContext || (window as any).webkitAudioContext
+    )();
+    const masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.5;
+    masterGain.connect(audioCtx.destination);
+
+    const delayNode = audioCtx.createDelay(2.0);
+    delayNode.delayTime.value = 0.4;
+    const delayGain = audioCtx.createGain();
+    delayGain.gain.value = get().echoLevel;
+
+    delayNode.connect(delayGain);
+    delayGain.connect(delayNode);
+    delayGain.connect(masterGain);
+    set((state) => ({
+      ...state,
+      audioCtx,
+      masterGain,
+      delayNode,
+      delayGain,
+      isInitialized: true,
+    }));
+  },
+  setEchoLevel: (level) => {
+    set((state) => {
+      const delayGain = state.delayGain;
+      if (delayGain) delayGain.gain.value = level;
+      return {
+        ...state,
+        echoLevel: level,
+        delayGain,
+      };
+    });
+  },
+  setReverbLevel: (level) => {
+    set((state) => ({
+      ...state,
+      reverbLevel: level,
+      // TODO: add setting reverbGain values etc.
+    }));
+  },
+  setVibe: (vibe) => {
+    set((state) => ({
+      ...state,
+      vibe: vibe,
+    }));
+  },
+}));

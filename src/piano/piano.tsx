@@ -1,93 +1,83 @@
-import { useState, useEffect, useRef } from "react";
-import { KEYS, KEY_MAP, PianoVibe } from "./utils";
+import { useState, useEffect, useCallback } from "react";
+import { KEYS, getKeyByKeyboardKey } from "./utils";
 import { BlackPianoKey } from "./black-piano-key";
 import { Settings } from "./settings";
 import { ChordMode } from "./utils";
 import { WhitePianoKey } from "./white-piano-key";
-import { usePlayPiano, type UsePlayNoteArgs } from "./hooks/usePlayNode";
+import { usePlayPiano } from "./hooks/usePlayNode";
 import { PianoStyles } from "./piano-styles";
 import { PianoSliders } from "./piano-sliders";
+import { useAudioStore, useRecorderStore } from "../context/store";
+import type { AudioSoundNote } from "../audio/types";
 export default function Piano() {
-  const [vibe, setVibe] = useState<PianoVibe>(PianoVibe.CLASSIC);
-  const [reverbLevel, setReverbLevel] = useState(0.4);
-  const [echoLevel, setEchoLevel] = useState(0.3);
   const [octave, setOctave] = useState(0);
   const [chordMode, setChordMode] = useState<ChordMode>(ChordMode.NONE);
-  const [activeKeys, setActiveKeys] = useState<Set<number>>(new Set());
-
-  const audioCtx = useRef<AudioContext | null>(null);
-  const masterGain = useRef<GainNode | null>(null);
-  const reverbNode = useRef<ConvolverNode | null>(null);
-  const delayNode = useRef<DelayNode | null>(null);
-  const delayGain = useRef<GainNode | null>(null);
-  const activeOscillators = useRef<UsePlayNoteArgs["activeOscillators"]>(
-    new Map(),
+  const [activeKeys, setActiveKeys] = useState<Set<AudioSoundNote["note"]>>(
+    new Set(),
   );
-
-  useEffect(() => {
-    const ctx = new (
-      window.AudioContext || (window as any).webkitAudioContext
-    )();
-    audioCtx.current = ctx;
-    console.log(audioCtx.current);
-    const master = ctx.createGain();
-    master.gain.value = 0.5;
-    master.connect(ctx.destination);
-    masterGain.current = master;
-
-    const delay = ctx.createDelay(2.0);
-    delay.delayTime.value = 0.4;
-    const dGain = ctx.createGain();
-    dGain.gain.value = echoLevel;
-
-    delay.connect(dGain);
-    dGain.connect(delay);
-    dGain.connect(master);
-
-    delayNode.current = delay;
-    delayGain.current = dGain;
-
-    return () => {
-      ctx.close();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (delayGain.current) {
-      delayGain.current.gain.setTargetAtTime(
-        echoLevel * 0.6,
-        audioCtx.current!.currentTime,
-        0.1,
-      );
-    }
-  }, [echoLevel]);
+  const { recordNote, endNote } = useRecorderStore();
+  const {
+    vibe,
+    masterGain,
+    delayNode,
+    reverbNode,
+    activeOscillators,
+    audioCtx,
+    reverbLevel,
+    echoLevel,
+    setReverbLevel,
+    setEchoLevel,
+    setVibe,
+  } = useAudioStore();
   const { playNote, stopNote } = usePlayPiano({
     vibe,
-    masterGain: masterGain.current,
-    delayNode: delayNode.current,
-    reverbNode: reverbNode.current,
-    activeOscillators: activeOscillators.current,
+    masterGain: masterGain,
+    delayNode: delayNode,
+    reverbNode: reverbNode,
+    activeOscillators,
     chordMode,
     octave,
-    onKeyActive: (index) => setActiveKeys((prev) => new Set(prev).add(index)),
-    onStopNote: (index) =>
+    onKeyActive: (note) => setActiveKeys((prev) => new Set(prev).add(note)),
+    onStopNote: (note) =>
       setActiveKeys((prev) => {
         const next = new Set(prev);
-        next.delete(index);
+        next.delete(note);
         return next;
       }),
   });
 
+  const playNoteWithRecording = useCallback(
+    (key: AudioSoundNote, audioCtx: AudioContext | null) => {
+      if (!audioCtx)
+        return console.warn(
+          "TODO: message for -> no audio context. Please refresh site",
+        );
+      const data = playNote(key, audioCtx);
+      if (data) recordNote(data, audioCtx);
+    },
+    [playNote, recordNote],
+  );
+  const stopNoteWithRecording = useCallback(
+    (key: AudioSoundNote, audioCtx: AudioContext | null) => {
+      if (!audioCtx)
+        return console.warn(
+          "TODO: message for -> no audio context. Please refresh site",
+        );
+      const data = stopNote(key, audioCtx);
+      if (data) endNote(data.note, audioCtx);
+    },
+    [stopNote, recordNote],
+  );
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const idx = KEY_MAP[e.key.toLowerCase()];
+      const key = getKeyByKeyboardKey(e.key);
 
-      if (idx !== undefined) playNote(idx, audioCtx.current);
+      if (key !== undefined) playNoteWithRecording(key, audioCtx);
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      const idx = KEY_MAP[e.key.toLowerCase()];
-      if (idx !== undefined) stopNote(idx, audioCtx.current);
+      const key = getKeyByKeyboardKey(e.key);
+      if (key !== undefined) stopNoteWithRecording(key, audioCtx);
     };
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
@@ -95,7 +85,7 @@ export default function Piano() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [playNote, stopNote]);
+  }, [playNoteWithRecording, stopNoteWithRecording]);
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-8 transition-all duration-700 bg-gradient-to-br from-zinc-900 to-black text-zinc-100">
@@ -131,15 +121,15 @@ export default function Piano() {
 
         <div className="relative h-60 w-full flex justify-center overflow-x-auto select-none py-2">
           <div className="relative flex min-w-[700px] w-full h-full">
-            {KEYS.map((key, i) =>
+            {KEYS.map((key) =>
               key.type === "white" ? (
                 <WhitePianoKey
-                  key={i}
-                  onMouseDown={() => playNote(i, audioCtx.current)}
-                  onMouseUp={() => stopNote(i, audioCtx.current)}
-                  onMouseLeave={() => stopNote(i, audioCtx.current)}
+                  key={key.note}
+                  onMouseDown={() => playNoteWithRecording(key, audioCtx)}
+                  onMouseUp={() => stopNoteWithRecording(key, audioCtx)}
+                  onMouseLeave={() => stopNoteWithRecording(key, audioCtx)}
                   className={`${
-                    activeKeys.has(i)
+                    activeKeys.has(key.note)
                       ? "bg-white translate-y-1 shadow-inner"
                       : "bg-neutral-100 hover:bg-white shadow-md"
                   }`}
@@ -163,11 +153,11 @@ export default function Piano() {
               return (
                 <BlackPianoKey
                   key={i}
-                  onMouseDown={() => playNote(i, audioCtx.current)}
-                  onMouseUp={() => stopNote(i, audioCtx.current)}
-                  onMouseLeave={() => stopNote(i, audioCtx.current)}
+                  onMouseDown={() => playNoteWithRecording(key, audioCtx)}
+                  onMouseUp={() => stopNoteWithRecording(key, audioCtx)}
+                  onMouseLeave={() => stopNoteWithRecording(key, audioCtx)}
                   className={`${
-                    activeKeys.has(i)
+                    activeKeys.has(key.note)
                       ? "bg-neutral-800 scale-95"
                       : "bg-neutral-900 hover:bg-neutral-800 shadow-xl"
                   }`}

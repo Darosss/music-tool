@@ -1,5 +1,6 @@
 import { useCallback } from "preact/hooks";
-import { KEYS, switchVibe, ChordMode, PianoVibe } from "../utils";
+import { switchVibe, ChordMode, PianoVibe } from "../utils";
+import type { AudioEngineEvent, AudioSoundNote } from "../../audio/types";
 export interface UsePlayNoteArgs {
   vibe: PianoVibe;
   masterGain: GainNode | null;
@@ -7,9 +8,12 @@ export interface UsePlayNoteArgs {
   reverbNode: ConvolverNode | null;
   octave: number;
   chordMode: ChordMode;
-  activeOscillators: Map<number, { oscs: OscillatorNode[]; gain: GainNode }>;
-  onKeyActive: (index: number) => void;
-  onStopNote: (index: number) => void;
+  activeOscillators: Map<
+    AudioSoundNote["note"],
+    { oscs: OscillatorNode[]; gain: GainNode }
+  >;
+  onKeyActive: (note: AudioSoundNote["note"]) => void;
+  onStopNote: (note: AudioSoundNote["note"]) => void;
 }
 
 export const usePlayPiano = ({
@@ -24,12 +28,14 @@ export const usePlayPiano = ({
   chordMode,
 }: UsePlayNoteArgs) => {
   const playNote = useCallback(
-    (index: number, ctx: AudioContext | null) => {
-      if (!ctx || activeOscillators.has(index)) return;
+    (
+      key: AudioSoundNote,
+      ctx: AudioContext | null,
+    ): AudioEngineEvent | null => {
+      if (!ctx || activeOscillators.has(key.note)) return null;
 
       if (ctx.state === "suspended") ctx.resume();
 
-      const key = KEYS[index];
       const octaveMultiplier = Math.pow(2, octave);
       const now = ctx.currentTime;
 
@@ -66,7 +72,7 @@ export const usePlayPiano = ({
         gain: allInstances[0].gain,
       };
 
-      activeOscillators.set(index, aggregated);
+      activeOscillators.set(key.note, aggregated);
 
       aggregated.gain = {
         ...allInstances[0].gain,
@@ -80,22 +86,36 @@ export const usePlayPiano = ({
         },
       } as any;
 
-      onKeyActive(index);
+      onKeyActive(key.note);
+      return {
+        start: ctx.currentTime,
+        end: null,
+        note: key.note,
+        freq: key.freq,
+      };
     },
     [vibe, octave, chordMode, onKeyActive],
   );
   const stopNote = useCallback(
-    (index: number, ctx: AudioContext | null) => {
-      const data = activeOscillators.get(index);
+    (
+      note: AudioSoundNote,
+      ctx: AudioContext | null,
+    ): Omit<AudioEngineEvent, "start"> | null => {
+      const data = activeOscillators.get(note.note);
+      if (!ctx) return null;
       if (data && ctx) {
         const now = ctx.currentTime;
         data.gain.gain.setTargetAtTime(0, now, 0.1);
         setTimeout(() => {
           data.oscs.forEach((o) => o.stop());
-          activeOscillators.delete(index);
+          activeOscillators.delete(note.note);
         }, 200);
-        onStopNote(index);
+        onStopNote(note.note);
       }
+      return {
+        end: ctx.currentTime,
+        ...note,
+      };
     },
     [onStopNote],
   );

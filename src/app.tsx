@@ -1,7 +1,9 @@
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import "./app.css";
 import type { JSX } from "preact";
 import Piano from "./piano/piano";
+import { useAudioStore } from "./context/store";
+import { Recorder } from "./audio/recorder";
 enum Pages {
   PIANO = "Piano",
   MoreSoon = "More Soon",
@@ -14,7 +16,15 @@ const PagesContent: Record<Pages, () => JSX.Element> = {
 
 export function App() {
   const [currentPage, setCurrentPage] = useState<Pages>(Pages.PIANO);
+  const initAudio = useAudioStore().initAudio;
   const CurrentPageComponent = PagesContent[currentPage];
+
+  useEffect(() => {
+    console.warn(
+      "TODO: move later into on button click, but for now just init on load",
+    );
+    initAudio();
+  }, []);
   return (
     <>
       <section id="hero" className={"mt-1 flex justify-center"}>
@@ -29,7 +39,9 @@ export function App() {
           ))}
         </div>
       </section>
-
+      <section>
+        <Recorder />
+      </section>
       <section id="center">
         <CurrentPageComponent />
       </section>

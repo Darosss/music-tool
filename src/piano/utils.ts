@@ -1,6 +1,6 @@
-export interface PianoKey {
-  note: string;
-  freq: number;
+import type { AudioSoundNote } from "../audio/types";
+
+export interface PianoKey extends AudioSoundNote {
   type: "white" | "black";
   label: string;
 }
@@ -46,46 +46,17 @@ export const KEYS: PianoKey[] = [
   { note: "B5", freq: 987.77, type: "white", label: ";" },
   { note: "C6", freq: 1046.5, type: "white", label: "'" },
 ];
-
-export const KEY_MAP: Record<string, number> = {
-  z: 0,
-  s: 1,
-  x: 2,
-  d: 3,
-  c: 4,
-  v: 5,
-  g: 6,
-  b: 7,
-  h: 8,
-  n: 9,
-  j: 10,
-  m: 11,
-  q: 12,
-  "2": 13,
-  w: 14,
-  "3": 15,
-  e: 16,
-  r: 17,
-  "5": 18,
-  t: 19,
-  "6": 20,
-  y: 21,
-  "7": 22,
-  u: 23,
-  i: 24,
-  "9": 25,
-  o: 26,
-  "0": 27,
-  p: 28,
-  "[": 29,
-  "=": 30,
-  "]": 31,
-  a: 32,
-  k: 33,
-  l: 34,
-  ";": 35,
-  "'": 36,
+const getMappedKeysButtons = () => {
+  const map = new Map<string, PianoKey>();
+  for (const k of KEYS) {
+    map.set(k.label.toUpperCase(), k);
+  }
+  return map;
 };
+const MAPPED_KEYBOARD_KEYS = getMappedKeysButtons();
+
+export const getKeyByKeyboardKey = (key: string) =>
+  MAPPED_KEYBOARD_KEYS.get(key.toUpperCase());
 
 export enum ChordMode {
   NONE = "none",
