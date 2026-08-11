@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "lucide-react": "^1.30.0",
-    "preact": "^10.29.7"
+    "preact": "^10.29.7",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.6",
