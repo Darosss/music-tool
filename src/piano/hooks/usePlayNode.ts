@@ -15,6 +15,10 @@ export interface UsePlayNoteArgs {
   onKeyActive: (note: AudioSoundNote["note"]) => void;
   onStopNote: (note: AudioSoundNote["note"]) => void;
 }
+export interface PlaybackOpts {
+  when: number;
+  duration: number;
+}
 
 export const usePlayPiano = ({
   vibe,
@@ -31,26 +35,38 @@ export const usePlayPiano = ({
     (
       key: AudioSoundNote,
       ctx: AudioContext | null,
+      playbackOpts?: PlaybackOpts,
     ): AudioEngineEvent | null => {
       if (!ctx || activeOscillators.has(key.note)) return null;
 
       if (ctx.state === "suspended") ctx.resume();
 
       const octaveMultiplier = Math.pow(2, octave);
-      const now = ctx.currentTime;
+      const now = playbackOpts?.when || ctx.currentTime;
 
       const playFreq = (freq: number) => {
         const oscs: OscillatorNode[] = [];
 
         const noteGain = ctx.createGain();
         switchVibe(vibe, ctx, freq, now, oscs, noteGain);
-        noteGain.gain.setValueAtTime(0, now);
-        noteGain.gain.linearRampToValueAtTime(0.3, now + 0.05);
 
         if (masterGain) noteGain.connect(masterGain);
         if (delayNode) noteGain.connect(delayNode);
         if (reverbNode) noteGain.connect(reverbNode);
-        oscs.forEach((o) => o.start());
+
+        if (playbackOpts) {
+          const { duration, when } = playbackOpts;
+          oscs.forEach((o) => {
+            o.start(when);
+            o.stop(when + duration + 0.02);
+          });
+          noteGain.gain.setValueAtTime(0.3, now + playbackOpts.duration - 0.02);
+          noteGain.gain.linearRampToValueAtTime(0, when + duration);
+        } else {
+          oscs.forEach((o) => o.start());
+        }
+        noteGain.gain.setValueAtTime(0, now);
+        noteGain.gain.linearRampToValueAtTime(0.3, now + 0.05);
         return { oscs, gain: noteGain };
       };
 
@@ -86,9 +102,9 @@ export const usePlayPiano = ({
         },
       } as any;
 
-      onKeyActive(key.note);
+      if (!playbackOpts) onKeyActive(key.note);
       return {
-        start: ctx.currentTime,
+        start: now,
         end: null,
         note: key.note,
         freq: key.freq,
@@ -100,6 +116,7 @@ export const usePlayPiano = ({
     (
       note: AudioSoundNote,
       ctx: AudioContext | null,
+      ignoreOnStopNote: boolean = false,
     ): Omit<AudioEngineEvent, "start"> | null => {
       const data = activeOscillators.get(note.note);
       if (!ctx) return null;
@@ -110,7 +127,7 @@ export const usePlayPiano = ({
           data.oscs.forEach((o) => o.stop());
           activeOscillators.delete(note.note);
         }, 200);
-        onStopNote(note.note);
+        if (!ignoreOnStopNote) onStopNote(note.note);
       }
       return {
         end: ctx.currentTime,

@@ -4,6 +4,13 @@ import type { AudioEngineEvent } from "../audio/types";
 import { PianoVibe } from "../piano/utils";
 
 export const useRecorderStore = create<RecorderStore>((set, get) => ({
+  togglePlayback: (audioCtx) => {
+    set((state) => ({
+      ...state,
+      isPlaybackOn: !state.isPlaybackOn,
+      playStartTime: audioCtx.currentTime,
+    }));
+  },
   startRecording: (audioCtx, loopLengthSeconds) => {
     set((state) => ({
       ...state,
@@ -24,9 +31,11 @@ export const useRecorderStore = create<RecorderStore>((set, get) => ({
   },
 
   isRecording: false,
+  isPlaybackOn: false,
   openNotes: new Map(),
   loopLength: 0,
   recordStartTime: 0,
+  playStartTime: 0,
   events: [],
 
   getRelativeTime: (audioCtx) => {

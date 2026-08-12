@@ -9,9 +9,12 @@ export interface RecorderStore {
   stopRecording: (audioCtx: AudioContext) => void;
   getRelativeTime: (audioCtx: AudioContext) => number;
   isRecording: boolean;
+  isPlaybackOn: boolean;
+  togglePlayback: (audioCtx: AudioContext) => void;
   openNotes: Map<string, AudioEngineEvent>;
   events: AudioEngineEvent[];
   recordStartTime: number;
+  playStartTime: number;
   loopLength: number | null;
   setIsRecording: (isRecording: boolean) => void;
   recordNote: (note: AudioEngineEvent, audioCtx: AudioContext) => void;

@@ -5,12 +5,15 @@ export function Recorder() {
   const [recordLength, setRecordLength] = useState(20);
 
   const isRecording = useRecorderStore((s) => s.isRecording);
+  const isPlaybackOn = useRecorderStore((s) => s.isPlaybackOn);
   const startRecording = useRecorderStore((s) => s.startRecording);
   const stopRecording = useRecorderStore((s) => s.stopRecording);
+  const togglePlayback = useRecorderStore((s) => s.togglePlayback);
   const events = useRecorderStore((s) =>
     s.events.sort((e, e2) => e.start - e2.start),
   );
   const audioCtx = useAudioStore((state) => state.audioCtx);
+
   const toggleRecord = () => {
     if (!audioCtx)
       return console.warn("TODO: add info abotu no audioCtx in toggleRecord");
@@ -28,6 +31,9 @@ export function Recorder() {
           {isRecording
             ? "⬛ Stop Recording"
             : `🔴 Record (${recordLength}s loop)`}
+        </button>
+        <button onClick={() => audioCtx && togglePlayback(audioCtx)}>
+          {isPlaybackOn ? "⬛ Stop playback" : `▶ Start Playback`}
         </button>
         {!isRecording && (
           <input
