@@ -15,7 +15,8 @@ export default function Piano() {
   const [activeKeys, setActiveKeys] = useState<Set<AudioSoundNote["note"]>>(
     new Set(),
   );
-  const { recordNote, endNote } = useRecorderStore();
+  const recordNote = useRecorderStore((s) => s.recordNote);
+  const endNote = useRecorderStore((s) => s.endNote);
   const {
     vibe,
     masterGain,

@@ -16,7 +16,7 @@ const PagesContent: Record<Pages, () => JSX.Element> = {
 
 export function App() {
   const [currentPage, setCurrentPage] = useState<Pages>(Pages.PIANO);
-  const initAudio = useAudioStore().initAudio;
+  const initAudio = useAudioStore((s) => s.initAudio);
   const CurrentPageComponent = PagesContent[currentPage];
 
   useEffect(() => {
