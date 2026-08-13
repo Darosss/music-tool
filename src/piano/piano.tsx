@@ -129,21 +129,14 @@ export default function Piano() {
       clearInterval(schedulerTimer);
     };
   }, [isPlaybackOn]);
-  const [time, setTime] = useState(0);
-  useEffect(() => {
-    if (!isPlaybackOn) return;
-    const inter = setInterval(() => {
-      setTime(audioCtx?.currentTime || 0);
-    }, 1000);
-    return () => clearInterval(inter);
-  }, [audioCtx, isPlaybackOn, events]);
+
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-8 transition-all duration-700 bg-gradient-to-br from-zinc-900 to-black text-zinc-100">
       <div className="bg-white/5 backdrop-blur-2xl p-10 rounded-md shadow-2xl border border-white/10 w-full max-w-4xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
           <div>
             <h1 className="text-4xl font-bold mb-2 transition-colors text-white">
-              Piano {isPlaybackOn && "playing"} {time.toFixed(0)}
+              Piano
             </h1>
           </div>
 
