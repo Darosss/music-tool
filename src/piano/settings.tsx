@@ -17,10 +17,10 @@ export function Settings({
 }: SettingsProps) {
   return (
     <>
-      <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
+      <div className="flex gap-1  bg-white/5 p-1 rounded-xl border border-white/10">
         <Button
           onClick={onLowOctave}
-          className="px-3 py-1 hover:bg-white/10 rounded-full text-xs text-white"
+          className="px-3 py-1 hover:bg-white/10 text-xs text-white"
         >
           Low
         </Button>
@@ -29,18 +29,18 @@ export function Settings({
         </span>
         <Button
           onClick={onHighOctave}
-          className="px-3 py-1 hover:bg-white/10 rounded-full text-xs text-white"
+          className="px-3 py-1 hover:bg-white/10 text-xs text-white"
         >
           High
         </Button>
       </div>
 
-      <div className="flex bg-white/5 p-1 rounded-full border border-white/10">
+      <div className="flex gap-1 bg-white/5 p-1 rounded-xl border border-white/10">
         {Object.values(ChordMode).map((mode) => (
           <Button
             key={mode}
             onClick={() => onChordModeChange(mode)}
-            className={`px-3 py-1 rounded-full text-xs transition-all ${
+            className={`px-3 py-1 text-xs transition-all ${
               chordMode === mode
                 ? "bg-white text-black"
                 : "text-white/60 hover:text-white"

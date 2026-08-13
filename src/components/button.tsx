@@ -11,7 +11,7 @@ export function Button({
   return (
     <button
       {...rest}
-      className={`${className || ""} border px-1 hover:brightness-200 rounded-md border-current`}
+      className={`${className || ""} border px-1 hover:brightness-200 rounded-md border-current overflow-hidden md:text-xs lg:text-md text-[8px]`}
     >
       {children}
     </button>

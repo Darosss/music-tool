@@ -1,5 +1,6 @@
 import { Music } from "lucide-react";
 import { NoteVibe } from "../audio/vibe";
+import { Button } from "../components/button";
 
 interface PianoStylesProps {
   vibe: NoteVibe;
@@ -14,19 +15,19 @@ export function PianoStyles({ vibe, onSetVibe }: PianoStylesProps) {
           <Music size={16} /> Synthesis Styles
         </div>
       </div>
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid sm:grid-cols-3 grid-cols-2 gap-2">
         {Object.values(NoteVibe).map((v) => (
-          <button
+          <Button
             key={v}
             onClick={() => onSetVibe(v)}
-            className={`px-2 py-3 rounded-2xl text-[10px] uppercase tracking-widest font-bold transition-all border ${
+            className={`px-2 md:py-3 uppercase tracking-widest font-bold transition-all border ${
               vibe === v
                 ? "bg-white text-black border-white shadow-lg"
                 : "bg-white/5 border-white/10 text-white/60 hover:border-white/30"
             }`}
           >
             {v}
-          </button>
+          </Button>
         ))}
       </div>
     </div>

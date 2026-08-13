@@ -130,7 +130,7 @@ export default function Piano() {
   }, [isPlaybackOn]);
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center justify-center p-8 transition-all duration-700 bg-gradient-to-br from-zinc-900 to-black text-zinc-100">
+    <div className="min-h-screen w-full flex flex-col items-center justify-center p-8 transition-all duration-700">
       <div className="bg-white/5 backdrop-blur-2xl p-10 rounded-md shadow-2xl border border-white/10 w-full max-w-4xl">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
           <div>
@@ -162,7 +162,7 @@ export default function Piano() {
         </div>
 
         <div className="relative h-60 w-full flex justify-center overflow-x-auto select-none py-2">
-          <div className="relative flex min-w-[700px] w-full h-full">
+          <div className="relative flex xl:min-w-[700px] w-full h-full">
             {KEYS.map((key) =>
               key.type === "white" ? (
                 <WhitePianoKey

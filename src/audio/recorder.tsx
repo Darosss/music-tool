@@ -28,15 +28,15 @@ export function Recorder() {
   };
 
   return (
-    <div className={"py-5 h-full"}>
+    <div className={"py-5 h-full "}>
       <div>
         <RecorderEvents
           open={eventsOpen}
           onClose={() => setEventsOpen(false)}
         />
       </div>
-      <div className="flex w-full bg-red-500 h-16">
-        <div className="flex grow gap-2 justify-center px-5 z-[1] bg-black/90">
+      <div className="flex-col md:flex-row flex w-full h-16 border-b border-white/20">
+        <div className="flex grow gap-2 justify-center px-5 z-[1] py-1">
           <Button
             onClick={() => audioCtx && togglePlayback(audioCtx)}
             className="grow"
@@ -52,7 +52,7 @@ export function Recorder() {
             Events
           </Button>
         </div>
-        <div className="flex gap-2 grow justify-center px-5 z-[1] bg-black/90">
+        <div className="flex gap-2 grow justify-center px-5 z-[1] py-1">
           <Button onClick={toggleRecord} className="grow">
             {isRecording
               ? "⬛ Stop Recording"
