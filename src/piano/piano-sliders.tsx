@@ -26,7 +26,14 @@ export function PianoSliders({
             max="1"
             step="0.01"
             value={reverbLevel}
-            onChange={(e) => onSetReverbLevel(parseFloat(e.target.value))}
+            onChange={(e) => {
+              const target = e.target;
+              if (target != null) {
+                onSetReverbLevel(
+                  parseFloat((target as HTMLInputElement).value),
+                );
+              }
+            }}
             className="w-full accent-white"
           />
         </div>
@@ -40,7 +47,12 @@ export function PianoSliders({
             max="1"
             step="0.01"
             value={echoLevel}
-            onChange={(e) => onSetEchoLevel(parseFloat(e.target?.value))}
+            onChange={(e) => {
+              const target = e.target;
+              if (target != null) {
+                onSetEchoLevel(parseFloat((target as HTMLInputElement).value));
+              }
+            }}
             className="w-full accent-white"
           />
         </div>
