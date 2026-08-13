@@ -65,7 +65,6 @@ export default function Piano() {
           "TODO: message for -> no audio context. Please refresh site",
         );
       const data = playNote(key, audioCtx);
-      console.log("record", data);
       if (data) recordNote(data, audioCtx);
     },
     [playNote, recordNote],

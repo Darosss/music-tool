@@ -4,6 +4,7 @@ import type { JSX } from "preact";
 import Piano from "./piano/piano";
 import { useAudioStore } from "./context/store";
 import { Recorder } from "./audio/recorder";
+import { Button } from "./components/button";
 enum Pages {
   PIANO = "Piano",
   MoreSoon = "More Soon",
@@ -30,12 +31,12 @@ export function App() {
       <section id="hero" className={"mt-1 flex justify-center"}>
         <div className="gap-2 flex">
           {Object.values(Pages).map((page) => (
-            <button
-              className={`border p-2 rounded-xl ${currentPage === page ? "bg-emerald-200" : ""}`}
+            <Button
+              className={`p-2 ${currentPage === page ? "bg-emerald-200" : ""}`}
               onClick={() => setCurrentPage(page)}
             >
               {page}
-            </button>
+            </Button>
           ))}
         </div>
       </section>

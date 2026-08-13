@@ -1,6 +1,7 @@
 import { useCallback } from "preact/hooks";
 import { useRecorderStore } from "../context/store";
 import { renderEventsToWav } from "./render";
+import { Button } from "../components/button";
 
 export function Downloader() {
   const events = useRecorderStore((s) => s.events);
@@ -21,5 +22,5 @@ export function Downloader() {
     });
   }, [events]);
 
-  return <button onClick={onDownload}> Download </button>;
+  return <Button onClick={onDownload}> Download </Button>;
 }
