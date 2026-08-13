@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { AudioStore, RecorderStore } from "./types";
 import type { AudioEngineEvent } from "../audio/types";
-import { PianoVibe } from "../piano/utils";
+import { NoteVibe } from "../audio/vibe";
 
 export const useRecorderStore = create<RecorderStore>((set, get) => ({
   togglePlayback: (audioCtx) => {
@@ -94,7 +94,7 @@ export const useRecorderStore = create<RecorderStore>((set, get) => ({
 export const useAudioStore = create<AudioStore>((set, get) => ({
   audioCtx: null,
   isInitialized: false,
-  vibe: PianoVibe.CLASSIC,
+  vibe: NoteVibe.CLASSIC,
   reverbLevel: 0,
   echoLevel: 0,
   masterGain: null,

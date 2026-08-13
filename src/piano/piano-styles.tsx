@@ -1,9 +1,9 @@
 import { Music } from "lucide-react";
-import { PianoVibe } from "./utils";
+import { NoteVibe } from "../audio/vibe";
 
 interface PianoStylesProps {
-  vibe: PianoVibe;
-  onSetVibe: (vibe: PianoVibe) => void;
+  vibe: NoteVibe;
+  onSetVibe: (vibe: NoteVibe) => void;
 }
 
 export function PianoStyles({ vibe, onSetVibe }: PianoStylesProps) {
@@ -15,7 +15,7 @@ export function PianoStyles({ vibe, onSetVibe }: PianoStylesProps) {
         </div>
       </div>
       <div className="grid grid-cols-5 gap-2">
-        {Object.values(PianoVibe).map((v) => (
+        {Object.values(NoteVibe).map((v) => (
           <button
             key={v}
             onClick={() => onSetVibe(v)}

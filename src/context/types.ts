@@ -1,5 +1,5 @@
 import type { AudioEngineEvent, AudioSoundNote } from "../audio/types";
-import type { PianoVibe } from "../piano/utils";
+import type { NoteVibe } from "../audio/vibe";
 
 export interface RecorderStore {
   startRecording: (
@@ -23,7 +23,7 @@ export interface RecorderStore {
 
 export interface AudioStore {
   audioCtx: AudioContext | null;
-  vibe: PianoVibe;
+  vibe: NoteVibe;
   reverbLevel: number;
   echoLevel: number;
   masterGain: GainNode | null;
@@ -41,5 +41,5 @@ export interface AudioStore {
   initAudio: () => void;
   setEchoLevel: (level: number) => void;
   setReverbLevel: (level: number) => void;
-  setVibe: (vibe: PianoVibe) => void;
+  setVibe: (vibe: NoteVibe) => void;
 }

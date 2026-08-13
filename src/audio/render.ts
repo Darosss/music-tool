@@ -1,18 +1,28 @@
+import { createEffectsChainCache } from "./effects-chain-cache";
+import { ChordMode } from "./enums";
+import { triggerNote } from "./note-engine";
 import type { AudioEngineEvent } from "./types";
 
 export interface RenderOptions {
   events: AudioEngineEvent[];
   loopLength: number;
   sampleRate?: number;
+  reverbTailPadding?: number;
+  fallbackVibe?: string;
+  fallbackOctave?: number;
 }
 
 export async function renderEventsToWav({
   events,
   loopLength,
   sampleRate = 44100,
+  reverbTailPadding = 0,
+  fallbackVibe = "sine",
+  fallbackOctave = 0,
 }: RenderOptions): Promise<Blob> {
   const numChannels = 2;
-  const length = Math.ceil(loopLength * sampleRate);
+  const totalDuration = loopLength + reverbTailPadding;
+  const length = Math.ceil(totalDuration * sampleRate);
 
   const offlineCtx = new OfflineAudioContext(numChannels, length, sampleRate);
 
@@ -20,38 +30,28 @@ export async function renderEventsToWav({
   master.gain.value = 0.8;
   master.connect(offlineCtx.destination);
 
-  for (const ev of events) {
-    const start = ev.start;
-    const end = ev.end ?? ev.start + 0.2;
-    const duration = Math.max(0.02, end - start);
+  const { getChain } = createEffectsChainCache(offlineCtx, master);
 
-    scheduleNote(offlineCtx, master, ev.freq, start, duration);
+  for (const ev of events) {
+    const duration = Math.max(0.02, (ev.end ?? ev.start + 0.2) - ev.start);
+    const { input } = getChain(ev.effects);
+
+    triggerNote(
+      { note: ev.note, freq: ev.freq },
+      { ctx: offlineCtx, masterGain: input as any },
+      {
+        vibe: ev.vibe ?? fallbackVibe,
+        octave: ev.octave ?? fallbackOctave,
+        chordMode: ev.chordMode ?? ChordMode.NONE,
+        playbackOpts: { when: ev.start, duration },
+      },
+    );
   }
 
   const renderedBuffer = await offlineCtx.startRendering();
   return audioBufferToWavBlob(renderedBuffer);
 }
 
-function scheduleNote(
-  ctx: OfflineAudioContext,
-  destination: AudioNode,
-  freq: number,
-  when: number,
-  duration: number,
-) {
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.frequency.value = freq;
-  osc.connect(gain).connect(destination);
-
-  gain.gain.setValueAtTime(0, when);
-  gain.gain.linearRampToValueAtTime(0.3, when + 0.01);
-  gain.gain.setValueAtTime(0.3, when + duration - 0.02);
-  gain.gain.linearRampToValueAtTime(0, when + duration);
-
-  osc.start(when);
-  osc.stop(when + duration + 0.02);
-}
 export function audioBufferToWavBlob(buffer: AudioBuffer): Blob {
   const numChannels = buffer.numberOfChannels;
   const sampleRate = buffer.sampleRate;

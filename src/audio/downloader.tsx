@@ -9,6 +9,7 @@ export function Downloader() {
   const onDownload = useCallback(() => {
     renderEventsToWav({
       events,
+      reverbTailPadding: 1.5,
       loopLength: loopLength || events.at(-1)?.end || 200,
     }).then((wavBlob) => {
       const url = URL.createObjectURL(wavBlob);

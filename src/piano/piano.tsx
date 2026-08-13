@@ -28,6 +28,7 @@ export default function Piano() {
     vibe,
     masterGain,
     delayNode,
+    delayGain,
     reverbNode,
     activeOscillators,
     audioCtx,
@@ -40,7 +41,10 @@ export default function Piano() {
   const { playNote, stopNote } = usePlayPiano({
     vibe,
     masterGain: masterGain,
-    delayNode: delayNode,
+    delay: {
+      node: delayNode,
+      gain: delayGain,
+    },
     reverbNode: reverbNode,
     activeOscillators,
     chordMode,
@@ -61,6 +65,7 @@ export default function Piano() {
           "TODO: message for -> no audio context. Please refresh site",
         );
       const data = playNote(key, audioCtx);
+      console.log("record", data);
       if (data) recordNote(data, audioCtx);
     },
     [playNote, recordNote],
@@ -72,7 +77,7 @@ export default function Piano() {
           "TODO: message for -> no audio context. Please refresh site",
         );
       const data = stopNote(key, audioCtx);
-      if (data) endNote(data.note, audioCtx);
+      if (data) endNote(key.note, audioCtx);
     },
     [stopNote, recordNote],
   );
