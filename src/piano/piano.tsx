@@ -22,19 +22,16 @@ export default function Piano() {
   const events = useRecorderStore((s) => s.events);
   const playStartTime = useRecorderStore((s) => s.playStartTime);
   const endNote = useRecorderStore((s) => s.endNote);
-
   const isPlaybackOn = useRecorderStore((s) => s.isPlaybackOn);
-  const {
-    vibe,
-    masterGain,
-    delayNode,
-    delayGain,
-    reverbNode,
-    activeOscillators,
-    audioCtx,
 
-    setVibe,
-  } = useAudioStore();
+  const vibe = useAudioStore((s) => s.vibe);
+  const masterGain = useAudioStore((s) => s.masterGain);
+  const delayNode = useAudioStore((s) => s.delayNode);
+  const delayGain = useAudioStore((s) => s.delayGain);
+  const reverbNode = useAudioStore((s) => s.reverbNode);
+  const activeOscillators = useAudioStore((s) => s.activeOscillators);
+  const audioCtx = useAudioStore((s) => s.audioCtx);
+  const setVibe = useAudioStore((s) => s.setVibe);
   const { playNote, stopNote } = usePlayPiano({
     vibe,
     masterGain: masterGain,
