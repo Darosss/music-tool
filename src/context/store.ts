@@ -188,11 +188,21 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
       };
     });
   },
-  setReverbShape: (duration, decay) => {
-    const { reverbNode, audioCtx } = get();
+  setReverbDuration: (value) => {
+    const { reverbNode, audioCtx, reverbDecay } = get();
     if (!audioCtx || !reverbNode) return;
-    reverbNode.buffer = generateImpulseResponse(audioCtx, duration, decay);
-    set({ reverbDuration: duration, reverbDecay: decay });
+    reverbNode.buffer = generateImpulseResponse(audioCtx, value, reverbDecay);
+    set({ reverbDuration: value });
+  },
+  setReverbDecay: (value) => {
+    const { reverbNode, audioCtx, reverbDuration } = get();
+    if (!audioCtx || !reverbNode) return;
+    reverbNode.buffer = generateImpulseResponse(
+      audioCtx,
+      reverbDuration,
+      value,
+    );
+    set({ reverbDecay: value });
   },
   setVibe: (vibe) => {
     set((state) => ({

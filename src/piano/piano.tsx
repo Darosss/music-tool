@@ -38,7 +38,8 @@ export default function Piano() {
     reverbDuration,
     setReverbLevel,
     setEchoLevel,
-    setReverbShape,
+    setReverbDecay,
+    setReverbDuration,
     setEchoMaxDelayTime,
     echoMaxDelayTime,
     setVibe,
@@ -165,7 +166,8 @@ export default function Piano() {
             onSetEchoLevel={setEchoLevel}
             reverbDecay={reverbDecay}
             reverbDuration={reverbDuration}
-            onSetReverbShape={setReverbShape}
+            onSetReverbDuration={setReverbDuration}
+            onSetReverbDecay={setReverbDecay}
             onSetEchoMaxDelayTime={setEchoMaxDelayTime}
             echoMaxDelayTime={echoMaxDelayTime}
           />

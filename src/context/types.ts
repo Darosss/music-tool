@@ -46,6 +46,7 @@ export interface AudioStore {
   setEchoLevel: (level: number) => void;
   setEchoMaxDelayTime: (time: number) => void;
   setReverbLevel: (level: number) => void;
-  setReverbShape: (duration: number, decay: number) => void;
+  setReverbDuration: (value: number) => void;
+  setReverbDecay: (value: number) => void;
   setVibe: (vibe: NoteVibe) => void;
 }
