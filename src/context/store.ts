@@ -6,29 +6,26 @@ import { generateImpulseResponse } from "../audio/effects-chain-cache";
 
 export const useRecorderStore = create<RecorderStore>((set, get) => ({
   togglePlayback: (audioCtx) => {
-    set((state) => ({
-      ...state,
-      isPlaybackOn: !state.isPlaybackOn,
+    const { isPlaybackOn } = get();
+    set({
+      isPlaybackOn: !isPlaybackOn,
       playStartTime: audioCtx.currentTime,
-    }));
+    });
   },
-  startRecording: (audioCtx, loopLengthSeconds) => {
-    set((state) => ({
-      ...state,
+  startRecording: (audioCtx, loopLengthSeconds) =>
+    set({
       isRecording: true,
       events: [],
       openNotes: new Map(),
       loopLength: loopLengthSeconds || null,
       recordStartTime: audioCtx?.currentTime || 0,
-    }));
-  },
+    }),
   stopRecording: (audioCtx) => {
-    set((state) => {
-      const now = state.getRelativeTime(audioCtx);
-      const newOpenNotes = state.openNotes;
-      for (const ev of newOpenNotes.values()) ev.end = now;
-      return { ...state, isRecording: false, openNotes: newOpenNotes };
-    });
+    const { getRelativeTime, openNotes } = get();
+    const now = getRelativeTime(audioCtx);
+    const newOpenNotes = openNotes;
+    for (const ev of newOpenNotes.values()) ev.end = now;
+    set({ isRecording: false, openNotes: newOpenNotes });
   },
 
   isRecording: false,
@@ -40,55 +37,50 @@ export const useRecorderStore = create<RecorderStore>((set, get) => ({
   events: [],
 
   getRelativeTime: (audioCtx) => {
-    const t = (audioCtx.currentTime || 0) - get().recordStartTime;
-    return get().loopLength ? t % (get().loopLength || 0) : t;
+    const { recordStartTime, loopLength } = get();
+    const t = (audioCtx.currentTime || 0) - recordStartTime;
+    return loopLength ? t % (loopLength || 0) : t;
   },
-  setIsRecording: (isRecording) => {
-    set((state) => ({
-      ...state,
-      isRecording: isRecording,
-    }));
-  },
+  setIsRecording: (isRecording) => set({ isRecording: isRecording }),
   recordNote: (note, audioCtx) => {
-    if (!get().isRecording) return;
+    const { isRecording, getRelativeTime, events, openNotes } = get();
+    if (!isRecording) return;
+
     const ev: AudioEngineEvent = {
       ...note,
-      start: get().getRelativeTime(audioCtx),
+      start: getRelativeTime(audioCtx),
       end: null,
     };
 
-    set((state) => {
-      const newEvents = [...state.events, ev];
-      const newOpenNotes = state.openNotes;
-      newOpenNotes.set(note.note, ev);
-      return {
-        ...state,
-        events: newEvents,
-        openNotes: newOpenNotes,
-      };
+    const newEvents = [...events, ev];
+    const newOpenNotes = openNotes;
+    newOpenNotes.set(note.note, ev);
+
+    set({
+      events: newEvents,
+      openNotes: newOpenNotes,
     });
   },
   endNote: (note, audioCtx) => {
-    set((state) => {
-      const foundOpenNote = state.openNotes.get(note);
-      const foundEventIdx = state.events.findIndex(
-        (n) => n.start === foundOpenNote?.start,
-      );
-      if (foundEventIdx == -1) return state;
+    const { openNotes, events, loopLength } = get();
+    const foundOpenNote = openNotes.get(note);
+    const foundEventIdx = events.findIndex(
+      (n) => n.start === foundOpenNote?.start,
+    );
+    if (foundEventIdx == -1) return;
 
-      const newEvents = state.events;
-      const endTime = get().getRelativeTime(audioCtx);
+    const newEvents = events;
+    const endTime = get().getRelativeTime(audioCtx);
 
-      const currentEvent = newEvents[foundEventIdx];
-      newEvents[foundEventIdx] = {
-        ...currentEvent,
-        end: endTime > currentEvent.start ? endTime : state.loopLength,
-      };
+    const currentEvent = newEvents[foundEventIdx];
+    newEvents[foundEventIdx] = {
+      ...currentEvent,
+      end: endTime > currentEvent.start ? endTime : loopLength,
+    };
 
-      const newOpenNotes = state.openNotes;
-      newOpenNotes.delete(note);
-      return { ...state, events: newEvents, openNotes: newOpenNotes };
-    });
+    const newOpenNotes = openNotes;
+    newOpenNotes.delete(note);
+    set({ events: newEvents, openNotes: newOpenNotes });
   },
 }));
 
@@ -115,19 +107,20 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
     const masterGain = audioCtx.createGain();
     masterGain.gain.value = 0.5;
     masterGain.connect(audioCtx.destination);
-
-    const delayNode = audioCtx.createDelay(get().echoMaxDelayTime);
+    const { echoMaxDelayTime, reverbDuration, reverbDecay, reverbLevel } =
+      get();
+    const delayNode = audioCtx.createDelay(echoMaxDelayTime);
     delayNode.delayTime.value = 0.4;
     const delayGain = audioCtx.createGain();
     delayGain.gain.value = get().echoLevel;
     const reverbNode = audioCtx.createConvolver();
     reverbNode.buffer = generateImpulseResponse(
       audioCtx,
-      get().reverbDuration,
-      get().reverbDecay,
+      reverbDuration,
+      reverbDecay,
     );
     const reverbGain = audioCtx.createGain();
-    reverbGain.gain.value = get().reverbLevel;
+    reverbGain.gain.value = reverbLevel;
 
     masterGain.connect(reverbNode).connect(reverbGain);
     reverbGain.connect(audioCtx.destination);
@@ -135,8 +128,7 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
     delayNode.connect(delayGain);
     delayGain.connect(delayNode);
     delayGain.connect(masterGain);
-    set((state) => ({
-      ...state,
+    set({
       audioCtx,
       masterGain,
       delayNode,
@@ -144,30 +136,23 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
       reverbNode,
       reverbGain,
       isInitialized: true,
-    }));
-  },
-  setEchoLevel: (level) => {
-    set((state) => {
-      const delayGain = state.delayGain;
-      const audioCtx = state.audioCtx;
-      if (delayGain && audioCtx)
-        delayGain.gain.setTargetAtTime(level, audioCtx.currentTime, 0.01);
-
-      return {
-        ...state,
-        echoLevel: level,
-        delayGain,
-      };
     });
   },
+  setEchoLevel: (level) => {
+    const { audioCtx, delayGain } = get();
+    if (delayGain && audioCtx)
+      delayGain.gain.setTargetAtTime(level, audioCtx.currentTime, 0.01);
+
+    set({ echoLevel: level });
+  },
   setEchoMaxDelayTime: (time) => {
-    const { audioCtx, masterGain, delayGain } = get();
+    const { audioCtx, masterGain, delayGain, echoLevel } = get();
     if (!audioCtx || !masterGain || !delayGain) return;
 
     get().delayNode?.disconnect();
 
     const delayNode = audioCtx.createDelay(time);
-    delayNode.delayTime.value = get().echoLevel ?? 0.4;
+    delayNode.delayTime.value = echoLevel ?? 0.4;
 
     masterGain.connect(delayNode);
     delayNode.connect(delayGain);
@@ -176,17 +161,11 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
     set({ delayNode, echoMaxDelayTime: time });
   },
   setReverbLevel: (level) => {
-    set((state) => {
-      const reverbGain = state.reverbGain;
-      const audioCtx = state.audioCtx;
-      if (reverbGain && audioCtx)
-        reverbGain.gain.setTargetAtTime(level, audioCtx.currentTime, 0.01);
-      return {
-        ...state,
-        reverbLevel: level,
-        reverbGain,
-      };
-    });
+    const { audioCtx, reverbGain } = get();
+    if (reverbGain && audioCtx)
+      reverbGain.gain.setTargetAtTime(level, audioCtx.currentTime, 0.01);
+
+    set({ reverbLevel: level });
   },
   setReverbDuration: (value) => {
     const { reverbNode, audioCtx, reverbDecay } = get();
@@ -204,10 +183,5 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
     );
     set({ reverbDecay: value });
   },
-  setVibe: (vibe) => {
-    set((state) => ({
-      ...state,
-      vibe: vibe,
-    }));
-  },
+  setVibe: (vibe) => set({ vibe }),
 }));
