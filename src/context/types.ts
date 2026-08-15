@@ -28,6 +28,7 @@ export interface AudioStore {
   reverbDecay: number;
   reverbDuration: number;
   echoLevel: number;
+  echoMaxDelayTime: number;
   masterGain: GainNode | null;
   reverbNode: ConvolverNode | null;
   reverbGain: GainNode | null;
@@ -43,6 +44,7 @@ export interface AudioStore {
   >;
   initAudio: () => void;
   setEchoLevel: (level: number) => void;
+  setEchoMaxDelayTime: (time: number) => void;
   setReverbLevel: (level: number) => void;
   setReverbShape: (duration: number, decay: number) => void;
   setVibe: (vibe: NoteVibe) => void;

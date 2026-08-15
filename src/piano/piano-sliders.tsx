@@ -8,6 +8,8 @@ interface PianoSlidersProps {
   reverbDecay: number;
   reverbDuration: number;
   onSetReverbShape: (duration: number, decay: number) => void;
+  echoMaxDelayTime: number;
+  onSetEchoMaxDelayTime: (value: number) => void;
 }
 
 export function PianoSliders({
@@ -18,6 +20,8 @@ export function PianoSliders({
   reverbDecay,
   reverbDuration,
   onSetReverbShape,
+  echoMaxDelayTime,
+  onSetEchoMaxDelayTime,
 }: PianoSlidersProps) {
   return (
     <>
@@ -28,11 +32,7 @@ export function PianoSliders({
           </div>
           <div className="flex flex-col gap-1">
             <div className="flex flex-col relative">
-              <label
-                id="reverb-level-value"
-                for="reverb-level"
-                className="inset-0 z-0"
-              >
+              <label id="reverb-level-value" for="reverb-level">
                 Level: {reverbLevel}
               </label>
 
@@ -54,11 +54,7 @@ export function PianoSliders({
               />
             </div>
             <div className="flex flex-col relative">
-              <label
-                id="reverb-decay-value"
-                for="reverb-decay"
-                className="inset-0 z-0"
-              >
+              <label id="reverb-decay-value" for="reverb-decay">
                 Decay: {reverbDecay}
               </label>
 
@@ -82,11 +78,7 @@ export function PianoSliders({
               />
             </div>
             <div className="flex flex-col relative">
-              <label
-                id="reverb-duration-value"
-                for="reverb-duration"
-                className="inset-0 z-0"
-              >
+              <label id="reverb-duration-value" for="reverb-duration">
                 Duration: {reverbDuration}
               </label>
 
@@ -108,27 +100,59 @@ export function PianoSliders({
                 }}
                 className="w-full accent-white z-[1]"
               />
-            </div>{" "}
+            </div>
           </div>
         </div>
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-white/80 text-sm font-medium">
             <Volume2 size={16} /> Echo
           </div>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={echoLevel}
-            onChange={(e) => {
-              const target = e.target;
-              if (target != null) {
-                onSetEchoLevel(parseFloat((target as HTMLInputElement).value));
-              }
-            }}
-            className="w-full accent-white"
-          />
+          <div className="flex flex-col relative">
+            <label id="echo-level-value" for="echo-level">
+              Level: {echoLevel}
+            </label>
+
+            <input
+              id="echo-level"
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={echoLevel}
+              onChange={(e) => {
+                const target = e.target;
+                if (target != null) {
+                  onSetEchoLevel(
+                    parseFloat((target as HTMLInputElement).value),
+                  );
+                }
+              }}
+              className="w-full accent-white z-[1]"
+            />
+          </div>{" "}
+          <div className="flex flex-col relative">
+            <label id="echo-level-value" for="echo-level">
+              Max Delay: {echoMaxDelayTime}
+            </label>
+
+            <input
+              id="echo-level"
+              type="range"
+              min="0"
+              max="30"
+              step="0.1"
+              value={echoMaxDelayTime}
+              onChange={(e) => {
+                const target = e.target;
+                if (target != null) {
+                  onSetEchoMaxDelayTime(
+                    parseFloat((target as HTMLInputElement).value),
+                  );
+                }
+              }}
+              className="w-full accent-white z-[1]"
+            />
+          </div>
         </div>
       </div>
     </>

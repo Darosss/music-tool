@@ -100,6 +100,7 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
   reverbDuration: 0,
   reverbDecay: 0,
   echoLevel: 0,
+  echoMaxDelayTime: 2.0,
   masterGain: null,
   reverbNode: null,
   reverbGain: null,
@@ -115,7 +116,7 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
     masterGain.gain.value = 0.5;
     masterGain.connect(audioCtx.destination);
 
-    const delayNode = audioCtx.createDelay(2.0);
+    const delayNode = audioCtx.createDelay(get().echoMaxDelayTime);
     delayNode.delayTime.value = 0.4;
     const delayGain = audioCtx.createGain();
     delayGain.gain.value = get().echoLevel;
@@ -158,6 +159,21 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
         delayGain,
       };
     });
+  },
+  setEchoMaxDelayTime: (time) => {
+    const { audioCtx, masterGain, delayGain } = get();
+    if (!audioCtx || !masterGain || !delayGain) return;
+
+    get().delayNode?.disconnect();
+
+    const delayNode = audioCtx.createDelay(time);
+    delayNode.delayTime.value = get().echoLevel ?? 0.4;
+
+    masterGain.connect(delayNode);
+    delayNode.connect(delayGain);
+    delayGain.connect(delayNode);
+
+    set({ delayNode, echoMaxDelayTime: time });
   },
   setReverbLevel: (level) => {
     set((state) => {
