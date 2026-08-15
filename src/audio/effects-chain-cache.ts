@@ -64,7 +64,7 @@ function buildChain(
   return { input };
 }
 
-function generateImpulseResponse(
+export function generateImpulseResponse(
   ctx: BaseAudioContext,
   duration: number,
   decay: number,

@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { AudioStore, RecorderStore } from "./types";
 import type { AudioEngineEvent } from "../audio/types";
 import { NoteVibe } from "../audio/vibe";
+import { generateImpulseResponse } from "../audio/effects-chain-cache";
 
 export const useRecorderStore = create<RecorderStore>((set, get) => ({
   togglePlayback: (audioCtx) => {
@@ -96,9 +97,12 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
   isInitialized: false,
   vibe: NoteVibe.CLASSIC,
   reverbLevel: 0,
+  reverbDuration: 0,
+  reverbDecay: 0,
   echoLevel: 0,
   masterGain: null,
   reverbNode: null,
+  reverbGain: null,
   delayNode: null,
   delayGain: null,
   activeOscillators: new Map(),
@@ -115,6 +119,17 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
     delayNode.delayTime.value = 0.4;
     const delayGain = audioCtx.createGain();
     delayGain.gain.value = get().echoLevel;
+    const reverbNode = audioCtx.createConvolver();
+    reverbNode.buffer = generateImpulseResponse(
+      audioCtx,
+      get().reverbDuration,
+      get().reverbDecay,
+    );
+    const reverbGain = audioCtx.createGain();
+    reverbGain.gain.value = get().reverbLevel;
+
+    masterGain.connect(reverbNode).connect(reverbGain);
+    reverbGain.connect(audioCtx.destination);
 
     delayNode.connect(delayGain);
     delayGain.connect(delayNode);
@@ -125,13 +140,18 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
       masterGain,
       delayNode,
       delayGain,
+      reverbNode,
+      reverbGain,
       isInitialized: true,
     }));
   },
   setEchoLevel: (level) => {
     set((state) => {
       const delayGain = state.delayGain;
-      if (delayGain) delayGain.gain.value = level;
+      const audioCtx = state.audioCtx;
+      if (delayGain && audioCtx)
+        delayGain.gain.setTargetAtTime(level, audioCtx.currentTime, 0.01);
+
       return {
         ...state,
         echoLevel: level,
@@ -140,11 +160,23 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
     });
   },
   setReverbLevel: (level) => {
-    set((state) => ({
-      ...state,
-      reverbLevel: level,
-      // TODO: add setting reverbGain values etc.
-    }));
+    set((state) => {
+      const reverbGain = state.reverbGain;
+      const audioCtx = state.audioCtx;
+      if (reverbGain && audioCtx)
+        reverbGain.gain.setTargetAtTime(level, audioCtx.currentTime, 0.01);
+      return {
+        ...state,
+        reverbLevel: level,
+        reverbGain,
+      };
+    });
+  },
+  setReverbShape: (duration, decay) => {
+    const { reverbNode, audioCtx } = get();
+    if (!audioCtx || !reverbNode) return;
+    reverbNode.buffer = generateImpulseResponse(audioCtx, duration, decay);
+    set({ reverbDuration: duration, reverbDecay: decay });
   },
   setVibe: (vibe) => {
     set((state) => ({

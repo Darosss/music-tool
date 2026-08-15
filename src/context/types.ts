@@ -25,9 +25,12 @@ export interface AudioStore {
   audioCtx: AudioContext | null;
   vibe: NoteVibe;
   reverbLevel: number;
+  reverbDecay: number;
+  reverbDuration: number;
   echoLevel: number;
   masterGain: GainNode | null;
   reverbNode: ConvolverNode | null;
+  reverbGain: GainNode | null;
   delayNode: DelayNode | null;
   delayGain: GainNode | null;
   isInitialized: boolean;
@@ -41,5 +44,6 @@ export interface AudioStore {
   initAudio: () => void;
   setEchoLevel: (level: number) => void;
   setReverbLevel: (level: number) => void;
+  setReverbShape: (duration: number, decay: number) => void;
   setVibe: (vibe: NoteVibe) => void;
 }

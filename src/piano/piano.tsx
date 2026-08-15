@@ -34,8 +34,11 @@ export default function Piano() {
     audioCtx,
     reverbLevel,
     echoLevel,
+    reverbDecay,
+    reverbDuration,
     setReverbLevel,
     setEchoLevel,
+    setReverbShape,
     setVibe,
   } = useAudioStore();
   const { playNote, stopNote } = usePlayPiano({
@@ -158,6 +161,9 @@ export default function Piano() {
             onSetReverbLevel={setReverbLevel}
             echoLevel={echoLevel}
             onSetEchoLevel={setEchoLevel}
+            reverbDecay={reverbDecay}
+            reverbDuration={reverbDuration}
+            onSetReverbShape={setReverbShape}
           />
         </div>
 
