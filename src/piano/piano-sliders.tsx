@@ -1,17 +1,5 @@
 import { Volume2, Waves } from "lucide-react";
-
-interface PianoSlidersProps {
-  reverbLevel: number;
-  onSetReverbLevel: (value: number) => void;
-  echoLevel: number;
-  onSetEchoLevel: (value: number) => void;
-  reverbDecay: number;
-  reverbDuration: number;
-  onSetReverbDuration: (value: number) => void;
-  onSetReverbDecay: (value: number) => void;
-  echoMaxDelayTime: number;
-  onSetEchoMaxDelayTime: (value: number) => void;
-}
+import { useAudioStore } from "../context/store";
 
 interface SettingsBlockProps<TVal extends number, TSetVal extends Function> {
   id: string;
@@ -60,24 +48,23 @@ function SettingsBlock<
   );
 }
 
-export function PianoSliders({
-  reverbLevel,
-  onSetReverbLevel,
-  echoLevel,
-  onSetEchoLevel,
-  reverbDecay,
-  reverbDuration,
-  onSetReverbDuration,
-  onSetReverbDecay,
-  echoMaxDelayTime,
-  onSetEchoMaxDelayTime,
-}: PianoSlidersProps) {
+export function PianoSliders() {
+  const reverbLevel = useAudioStore((s) => s.reverbLevel);
+  const echoLevel = useAudioStore((s) => s.echoLevel);
+  const reverbDecay = useAudioStore((s) => s.reverbDecay);
+  const reverbDuration = useAudioStore((s) => s.reverbDuration);
+  const setEchoLevel = useAudioStore((s) => s.setEchoLevel);
+  const setReverbLevel = useAudioStore((s) => s.setReverbLevel);
+  const setReverbDecay = useAudioStore((s) => s.setReverbDecay);
+  const setReverbDuration = useAudioStore((s) => s.setReverbDuration);
+  const setEchoMaxDelayTime = useAudioStore((s) => s.setEchoMaxDelayTime);
+  const echoMaxDelayTime = useAudioStore((s) => s.echoMaxDelayTime);
   const mappedEchoSettings = [
     {
       id: "echo-level",
       label: "Level",
       value: echoLevel,
-      onSet: onSetEchoLevel,
+      onSet: setEchoLevel,
       min: 0,
       max: 1,
       step: 0.01,
@@ -86,7 +73,7 @@ export function PianoSliders({
       id: "echo-delay",
       label: "Max Delay",
       value: echoMaxDelayTime,
-      onSet: onSetEchoMaxDelayTime,
+      onSet: setEchoMaxDelayTime,
       min: 0,
       max: 30,
       step: 0.1,
@@ -97,7 +84,7 @@ export function PianoSliders({
       id: "reverb-level",
       label: "Level",
       value: reverbLevel,
-      onSet: onSetReverbLevel,
+      onSet: setReverbLevel,
       min: 0,
       max: 1,
       step: 0.1,
@@ -106,7 +93,7 @@ export function PianoSliders({
       id: "reverb-decay",
       label: "Decay",
       value: reverbDecay,
-      onSet: onSetReverbDecay,
+      onSet: setReverbDecay,
       min: 0,
       max: 20,
       step: 0.1,
@@ -115,7 +102,7 @@ export function PianoSliders({
       id: "reverb-duration",
       label: "Duration",
       value: reverbDuration,
-      onSet: onSetReverbDuration,
+      onSet: setReverbDuration,
       min: 0,
       max: 20,
       step: 0.1,

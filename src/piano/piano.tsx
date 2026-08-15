@@ -32,16 +32,7 @@ export default function Piano() {
     reverbNode,
     activeOscillators,
     audioCtx,
-    reverbLevel,
-    echoLevel,
-    reverbDecay,
-    reverbDuration,
-    setReverbLevel,
-    setEchoLevel,
-    setReverbDecay,
-    setReverbDuration,
-    setEchoMaxDelayTime,
-    echoMaxDelayTime,
+
     setVibe,
   } = useAudioStore();
   const { playNote, stopNote } = usePlayPiano({
@@ -159,18 +150,7 @@ export default function Piano() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           <PianoStyles vibe={vibe} onSetVibe={setVibe} />
 
-          <PianoSliders
-            reverbLevel={reverbLevel}
-            onSetReverbLevel={setReverbLevel}
-            echoLevel={echoLevel}
-            onSetEchoLevel={setEchoLevel}
-            reverbDecay={reverbDecay}
-            reverbDuration={reverbDuration}
-            onSetReverbDuration={setReverbDuration}
-            onSetReverbDecay={setReverbDecay}
-            onSetEchoMaxDelayTime={setEchoMaxDelayTime}
-            echoMaxDelayTime={echoMaxDelayTime}
-          />
+          <PianoSliders />
         </div>
 
         <div className="relative h-60 w-full flex justify-center overflow-x-auto select-none py-2">
